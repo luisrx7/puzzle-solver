@@ -15,6 +15,7 @@ class puzzleGUI:
 
     def __init__(self, master, video_source=0):
         self.master = master
+        self.recent_image_file = None
 
         # Open video source (by default this will try to open the computer webcam)
         self.video_source = video_source
@@ -58,12 +59,13 @@ class puzzleGUI:
 
 
     def snapshot(self):
-         # Get a frame from the video source
-         ret, frame = self.vid.get_frame()
-
-         if ret:
-             cv2.imwrite("frame-" + time.strftime("%d-%m-%Y-%H-%M-%S") + ".jpg", cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
-
+        # Get a frame from the video source
+        ret, frame = self.vid.get_frame()
+        if ret:
+            photo = ImageTk.PhotoImage(image = Image.fromarray(frame))
+            self.recent_image.configure(image=photo)
+            self.recent_image.photo = photo
+        # self.master.after(self.delay, self.update)
 
     def update(self):
          # Get a frame from the video source
