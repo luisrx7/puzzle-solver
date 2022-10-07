@@ -1,10 +1,4 @@
-import os
 import cv2
-import sys
-import math
-import numpy as np
-from piece import Piece
-from sector import Sector
 from PIL import Image, ImageTk
 import tkinter as tk
 import tkinter.filedialog
@@ -15,7 +9,6 @@ IMAGE_WIDTH = 600
 IMAGE_HEIGHT = 335
 CAMERA_WIDTH = 533
 CAMERA_HEIGHT = 400
-
 
 class puzzleGUI:
 
@@ -42,7 +35,7 @@ class puzzleGUI:
         self.analysis_label = tk.Label(master, text='Target & Analysis')
         self.recent_image = tk.Label(master, text=' ')
         self.analysis_image = tk.Label(master, text=' ')
-        self.getfile_button = tk.Button(master, text='Import', command=self.get_poster_image)
+        self.getfile_button = tk.Button(master, text='Import', command=self.get_piece_from_file)
         self.getglobal_button = tk.Button(master, text='Import', command=self.get_poster_image)
 
         self.camera_label = tk.Label(master, text='Camera Feed')
@@ -63,28 +56,32 @@ class puzzleGUI:
         self.capture_button.grid()
         self.quit_button.grid()
 
-
     def snapshot(self):
         # Get a frame from the video source
         ret, frame = self.vid.get_frame()
-
         if ret:
             photo = ImageTk.PhotoImage(image = Image.fromarray(frame).resize((CAMERA_WIDTH, CAMERA_HEIGHT)))
             self.recent_image.configure(image=photo)
             self.recent_image.photo = photo
 
-
     def get_poster_image(self):
+        photo = self.get_image_from_file()
+        self.analysis_image.configure(image=photo)
+        self.analysis_image.photo = photo
+
+    def get_piece_from_file(self):
+        photo = self.get_image_from_file()
+        self.recent_image.configure(image=photo)
+        self.recent_image.photo = photo
+
+    def get_image_from_file(self):
         name = tk.filedialog.askopenfilename(initialdir = '~/Coding',
         filetypes = (('jpeg files','*.jpg'),('all files','*.*')))
 
         load = Image.open(name)
         resized = load.resize((CAMERA_WIDTH, CAMERA_HEIGHT))
         photo = ImageTk.PhotoImage(resized)
-
-        self.analysis_image.configure(image=photo)
-        self.analysis_image.photo = photo
-
+        return photo
 
     def update(self):
          # Get a frame from the video source
@@ -96,7 +93,6 @@ class puzzleGUI:
             self.camera_image.photo = photo
 
          self.master.after(self.delay, self.update)
-
 
 class MyVideoCapture:
     def __init__(self, video_source=0):
