@@ -42,8 +42,8 @@ class puzzleGUI:
         self.analysis_label = tk.Label(master, text='Target & Analysis')
         self.recent_image = tk.Label(master, text=' ')
         self.analysis_image = tk.Label(master, text=' ')
-        self.getfile_button = tk.Button(master, text='Import piece from file', command=self.get_poster_image)
-        self.getglobal_button = tk.Button(master, text='Import poster image from file', command=self.get_poster_image)
+        self.getfile_button = tk.Button(master, text='Import', command=self.get_poster_image)
+        self.getglobal_button = tk.Button(master, text='Import', command=self.get_poster_image)
 
         self.camera_label = tk.Label(master, text='Camera Feed')
         self.camera_image = tk.Label(master, text='Live Camera Feed')
