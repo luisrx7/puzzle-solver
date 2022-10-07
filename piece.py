@@ -3,7 +3,7 @@ import cv2
 import math
 import numpy as np
 from edge import Edge
-import solve_helper
+# import solve_helper
 
 EDGE_TOLERANCE = 0.05
 THRESHOLD_VALUE = 150
@@ -33,7 +33,7 @@ class Piece:
         # self.make_edge_images()  # If images are already cropped, comment this out to save time
         self.edges = self.categorize_piece(self.pieceName)
         # Edges are in order from left, bottom, right, top
-        print self
+        print (self)
 
 
     def __str__(self):
@@ -233,7 +233,7 @@ class Piece:
         if ratio > 1:
             ratio = 1/ratio
         eccentricity = math.sqrt(1 - ratio)  # e=0 for a circle, 0<e<1 for an ellipse, e=1 parabola
-        print "eccentricity", eccentricity
+        print ("eccentricity", eccentricity)
 
         # Rotate image back and output it
         rows, cols = img1.shape

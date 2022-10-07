@@ -7,17 +7,9 @@ from piece import Piece
 from sector import Sector
 from PIL import Image, ImageTk
 import tkinter as tk
-# import Tkconstants, tkFileDialog
-# import thread
 
 PADDING_X = 15
 PADDING_Y = 10
-IMAGE_WIDTH = 600
-IMAGE_HEIGHT = 335
-MIN_MATCH_COUNT = 4
-USE_MASKED_IMAGE = False
-DORY_DIMENSIONS = (6, 4)
-MINION_DIMENSIONS = (3, 4)
 
 class puzzleGUI:
 
@@ -31,69 +23,32 @@ class puzzleGUI:
         self.setupGui(master)
 
 
-    def setupGui(self, master):
-        # Create first half of GUI elements
-        self.canvas_label = tk.Label(master, text='Canvas', padx=PADDING_X, pady=PADDING_Y)
-        self.canvas_image = tk.Label(master, text=' ')
-        self.global_label = tk.Label(master, text='Global')
-        self.puzzle_name_label = tk.Label(master, text=' ')
-        self.puzzle_dimensions_label = tk.Label(master, text=' ')
-        self.success_count_label = tk.Label(master, text='Successes: '+str(self.success_count))
-        self.pieces_count_label = tk.Label(master, text='Pieces: '+str(self.pieces_count))
-        self.start_button = tk.Button(master, text='START', command=self.start)
-        self.delete_button = tk.Button(master, text='DELETE', command=self.delete_piece)
-        self.quit_button = tk.Button(master, text='QUIT', command=master.quit)
-
-        # Place the first half of the GUI
-        self.canvas_label.grid()
-        self.canvas_image.grid(rowspan=7)
-        self.global_label.grid(row=0, column=1)
-        self.puzzle_name_label.grid(row=1, column=1)
-        self.puzzle_dimensions_label.grid(row=2, column=1)
-        self.success_count_label.grid(row=3, column=1)
-        self.pieces_count_label.grid(row=4, column=1)
-        self.start_button.grid(row=5, column=1)
-        self.delete_button.grid(row=6, column=1)
-        self.quit_button.grid(row=7, column=1)
-
-        # Create second half of the GUI elements
-        self.analysis_label = tk.Label(master, text='Analysis', padx=PADDING_X, pady=PADDING_Y)
+    def setupGui (self, master):
+        # Create GUI elements
+        self.recent_label = tk.Label(master, text='Most Recent Piece', padx=PADDING_X, pady=PADDING_Y)
+        self.analysis_label = tk.Label(master, text='Target & Analysis')
+        self.recent_image = tk.Label(master, text=' ')
         self.analysis_image = tk.Label(master, text=' ')
-        self.piece_label = tk.Label(master, text='Piece')
-        self.piecename_label = tk.Label(master, text=' ')
-        self.matches_label = tk.Label(master, text=' ')
-        self.location_label = tk.Label(master, text=' ')
-        self.rotation_label = tk.Label(master, text=' ')
-        self.capture_button = tk.Button(master, text='CAPTURE', command=master.quit)
-        self.file_button = tk.Button(master, text='IMPORT FILE', command=self.getFile)
-        self.folder_button = tk.Button(master, text='IMPORT FOLDER', command=self.getFolder)
+        self.getfile_button = tk.Button(master, text='Import piece from file', command=master.quit)
+        self.getglobal_button = tk.Button(master, text='Import poster image from file', command=master.quit)
 
-        # Place the second half of the GUI
-        self.analysis_label.grid(row=8)
-        self.analysis_image.grid(row=9, rowspan=7)
-        self.piece_label.grid(row=8, column=1)
-        self.piecename_label.grid(row=9, column=1)
-        self.matches_label.grid(row=10, column=1)
-        self.location_label.grid(row=11, column=1)
-        self.rotation_label.grid(row=12, column=1)
-        self.capture_button.grid(row=13, column=1)
-        self.file_button.grid(row=14, column=1)
-        self.folder_button.grid(row=15, column=1)
+        self.camera_label = tk.Label(master, text='Camera Feed')
+        self.camera_image = tk.Label(master, text='Live Camera Feed')
+        self.capture_button = tk.Button(master, text='Capture', command=master.quit)
+        self.quit_button = tk.Button(master, text='Quit', command=master.quit)
 
+        # Place GUI elements
+        self.recent_label.grid(row=0, column=0)
+        self.analysis_label.grid(row=0, column=1)
+        self.recent_image.grid(row=1, column=0)
+        self.analysis_image.grid(row=1, column=1)
+        self.getfile_button.grid(row=2, column=0)
+        self.getglobal_button.grid(row=2, column=1)
 
-    def clearGUI(self):
-        self.puzzle_name.set('None')
-        self.puzzle_dimensions.set('0 x 0')
-        self.success_count = 0
-        self.success_count_label.configure(text='Successes: '+str(self.success_count))
-        self.pieces_count.set('Pieces: 0')
-
-        self.piece_name.set('None')
-        self.num_matches.set('Matches: 0')
-        self.location.set('Location: ( , )')
-        self.rotation.set('Rotation: 0 degrees')
-        self.time.set('Time: 0 ms')
-        pass
+        self.camera_label.grid()
+        self.camera_image.grid()
+        self.capture_button.grid()
+        self.quit_button.grid()
 
 
     def start(self):
@@ -138,19 +93,6 @@ class puzzleGUI:
         puzzleName = subpaths[-2]
         self.analyze_piece(pieceName, piecesPath, puzzleName)
 
-
-    def getFolder(self):
-        name = tkFileDialog.askdirectory(initialdir= '~/Dropbox/Puzzle/solver/input', title='Select Folder')
-        subpaths = name.split('/')
-        self.piecename_label.configure(text=subpaths[-1])
-        piecesPath = subpaths[-3] + '/' + subpaths[-2] + '/' + subpaths[-1] + '/'
-        puzzleName = subpaths[-1]
-        files = sorted(os.listdir(piecesPath))
-        if '.DS_Store' in files:
-            files.remove('.DS_Store')
-        for f in files:
-           # thread.start_new_thread(self.analyze_piece, (f, piecesPath, puzzleName))
-           self.analyze_piece(f, piecesPath, puzzleName)
 
 
     def analyze_piece(self, pieceName, piecesPath, puzzleName):
@@ -273,54 +215,8 @@ class puzzleGUI:
     def delete_piece(self):
         pass
 
-
-    def draw_puzzle(self, puzzleName, board, height, width, pieceName):
-        # Zero out the canvas and prepare for drawing
-        canvas = np.zeros((len(board[0]) * width, len(board) * height, 3))
-        count = 0
-        (w, h) = (len(board), len(board[0]))
-
-        # Go through matrix one-by-one. If there is a piece there, then draw it.
-        for i in range(w):
-            for j in range(h):
-                if board[i][j] is not None:
-                    piece_to_draw = board[i][j].pieces[0]  # First piece in the list will have most matches
-                    readFile = piece_to_draw.pieceName + ("-mask.jpg" if USE_MASKED_IMAGE is True else ".jpg")
-                    img = cv2.imread(readFile, cv2.IMREAD_REDUCED_COLOR_4)
-                    resized = cv2.resize(img, (width, height), interpolation = cv2.INTER_CUBIC)
-
-                    if USE_MASKED_IMAGE is True:  # Draw the images overlapped
-                        x_start = int(width * 0.5 * i)
-                        x_end = x_start + width
-                        y_start = int(height * 0.5 * j)
-                        y_end = y_start + height
-                        canvas[y_start:y_end, x_start:x_end] += resized[:,:]
-                        # TODO: Crop canvas to remove extra space
-                    else:  # Draw the images side-by-side
-                        canvas[height*j:height*(j+1), width*i:width*(i+1)] = resized[:,:]
-
-                    # Draw a circle to indicate there is more than 1 piece in that sector
-                    if len(board[i][j].pieces) > 1:
-                        x = int(width * (i + 0.5))
-                        y = int(height * (j + 0.5))
-                        cv2.circle(canvas, (x,y), 75, 255, -15)
-
-                    count += len(board[i][j].pieces)  # Should be just one, but sometimes more
-
-        resized = cv2.resize(canvas, (0,0), fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
-        cv2.imwrite('output/'+ puzzleName + "/canvas/" + str(count) + '.jpg', resized)
-
-        resized = cv2.resize(canvas, (IMAGE_WIDTH, IMAGE_HEIGHT))
-        cv2.imwrite("output/" + puzzleName + "/canvas/" + 'mini-' + pieceName, resized)
-        image = Image.open("output/" + puzzleName + "/canvas/" + 'mini-' + pieceName)
-        photo = ImageTk.PhotoImage(image)
-        self.canvas_image.configure(image=photo)
-        self.canvas_image.photo = photo
-
-
-
 if __name__ == '__main__':
     root = tk.Tk()
-    root.title('Python Computer Vision & Robot Puzzle Solver')
+    root.title('Python Computer Vision Puzzle Solver')
     app = puzzleGUI(root)
     root.mainloop()
