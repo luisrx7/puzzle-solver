@@ -3,12 +3,12 @@ import cv2
 import sys
 import math
 import numpy as np
+from Tkinter import *
 from piece import Piece
 from sector import Sector
 from PIL import Image, ImageTk
-import tkinter as tk
-# import Tkconstants, tkFileDialog
-# import thread
+import Tkinter, Tkconstants, tkFileDialog
+import thread
 
 PADDING_X = 15
 PADDING_Y = 10
@@ -33,21 +33,21 @@ class puzzleGUI:
 
     def setupGui(self, master):
         # Create first half of GUI elements
-        self.canvas_label = tk.Label(master, text='Canvas', padx=PADDING_X, pady=PADDING_Y)
-        self.canvas_image = tk.Label(master, text=' ')
-        self.global_label = tk.Label(master, text='Global')
-        self.puzzle_name_label = tk.Label(master, text=' ')
-        self.puzzle_dimensions_label = tk.Label(master, text=' ')
-        self.success_count_label = tk.Label(master, text='Successes: '+str(self.success_count))
-        self.pieces_count_label = tk.Label(master, text='Pieces: '+str(self.pieces_count))
-        self.start_button = tk.Button(master, text='START', command=self.start)
-        self.delete_button = tk.Button(master, text='DELETE', command=self.delete_piece)
-        self.quit_button = tk.Button(master, text='QUIT', command=master.quit)
+        self.canvas_label = Label(master, text='Canvas', padx=PADDING_X, pady=PADDING_Y)
+        self.canvas_image = Label(master, text=' ')
+        self.global_label = Label(master, text='Global')
+        self.puzzle_name_label = Label(master, text=' ')
+        self.puzzle_dimensions_label = Label(master, text=' ')
+        self.success_count_label = Label(master, text='Successes: '+str(self.success_count))
+        self.pieces_count_label = Label(master, text='Pieces: '+str(self.pieces_count))
+        self.start_button = Button(master, text='START', command=self.start)
+        self.delete_button = Button(master, text='DELETE', command=self.delete_piece, state=DISABLED)
+        self.quit_button = Button(master, text='QUIT', command=master.quit)
 
         # Place the first half of the GUI
-        self.canvas_label.grid()
+        self.canvas_label.grid(sticky=W)
         self.canvas_image.grid(rowspan=7)
-        self.global_label.grid(row=0, column=1)
+        self.global_label.grid(row=0, column=1, sticky=W)
         self.puzzle_name_label.grid(row=1, column=1)
         self.puzzle_dimensions_label.grid(row=2, column=1)
         self.success_count_label.grid(row=3, column=1)
@@ -57,21 +57,21 @@ class puzzleGUI:
         self.quit_button.grid(row=7, column=1)
 
         # Create second half of the GUI elements
-        self.analysis_label = tk.Label(master, text='Analysis', padx=PADDING_X, pady=PADDING_Y)
-        self.analysis_image = tk.Label(master, text=' ')
-        self.piece_label = tk.Label(master, text='Piece')
-        self.piecename_label = tk.Label(master, text=' ')
-        self.matches_label = tk.Label(master, text=' ')
-        self.location_label = tk.Label(master, text=' ')
-        self.rotation_label = tk.Label(master, text=' ')
-        self.capture_button = tk.Button(master, text='CAPTURE', command=master.quit)
-        self.file_button = tk.Button(master, text='IMPORT FILE', command=self.getFile)
-        self.folder_button = tk.Button(master, text='IMPORT FOLDER', command=self.getFolder)
+        self.analysis_label = Label(master, text='Analysis', padx=PADDING_X, pady=PADDING_Y)
+        self.analysis_image = Label(master, text=' ')
+        self.piece_label = Label(master, text='Piece')
+        self.piecename_label = Label(master, text=' ')
+        self.matches_label = Label(master, text=' ')
+        self.location_label = Label(master, text=' ')
+        self.rotation_label = Label(master, text=' ')
+        self.capture_button = Button(master, text='CAPTURE', command=master.quit, state=DISABLED)
+        self.file_button = Button(master, text='IMPORT FILE', command=self.getFile, state=DISABLED)
+        self.folder_button = Button(master, text='IMPORT FOLDER', command=self.getFolder, state=DISABLED)
 
         # Place the second half of the GUI
-        self.analysis_label.grid(row=8)
+        self.analysis_label.grid(row=8, sticky=W)
         self.analysis_image.grid(row=9, rowspan=7)
-        self.piece_label.grid(row=8, column=1)
+        self.piece_label.grid(row=8, column=1, sticky=W)
         self.piecename_label.grid(row=9, column=1)
         self.matches_label.grid(row=10, column=1)
         self.location_label.grid(row=11, column=1)
@@ -154,7 +154,7 @@ class puzzleGUI:
 
 
     def analyze_piece(self, pieceName, piecesPath, puzzleName):
-        print (piecesPath + pieceName)
+        print piecesPath + pieceName
 
         # Read in query image, find features, and find matches
         queryImage = cv2.imread(piecesPath + pieceName, cv2.IMREAD_REDUCED_COLOR_2)
@@ -320,7 +320,7 @@ class puzzleGUI:
 
 
 if __name__ == '__main__':
-    root = tk.Tk()
+    root = Tk()
     root.title('Python Computer Vision & Robot Puzzle Solver')
     app = puzzleGUI(root)
     root.mainloop()
