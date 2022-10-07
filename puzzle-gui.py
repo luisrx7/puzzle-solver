@@ -7,9 +7,15 @@ from piece import Piece
 from sector import Sector
 from PIL import Image, ImageTk
 import tkinter as tk
+import tkinter.filedialog
 
 PADDING_X = 15
 PADDING_Y = 10
+IMAGE_WIDTH = 600
+IMAGE_HEIGHT = 335
+CAMERA_WIDTH = 533
+CAMERA_HEIGHT = 400
+
 
 class puzzleGUI:
 
@@ -22,7 +28,7 @@ class puzzleGUI:
         self.cap=cv2.VideoCapture(0)
         self.vid = MyVideoCapture(self.video_source)
 
-        self.setupGui(master)
+        self.setup_gui(master)
 
         # After it is called once, the update method will be automatically called every delay milliseconds
         self.delay = 15
@@ -30,14 +36,14 @@ class puzzleGUI:
 
         self.master.mainloop()
 
-    def setupGui (self, master):
+    def setup_gui (self, master):
         # Create GUI elements
-        self.recent_label = tk.Label(master, text='Most Recent Piece', padx=PADDING_X, pady=PADDING_Y)
+        self.recent_label = tk.Label(master, text='Most Recent Piece')
         self.analysis_label = tk.Label(master, text='Target & Analysis')
         self.recent_image = tk.Label(master, text=' ')
         self.analysis_image = tk.Label(master, text=' ')
-        self.getfile_button = tk.Button(master, text='Import piece from file', command=master.quit)
-        self.getglobal_button = tk.Button(master, text='Import poster image from file', command=master.quit)
+        self.getfile_button = tk.Button(master, text='Import piece from file', command=self.get_poster_image)
+        self.getglobal_button = tk.Button(master, text='Import poster image from file', command=self.get_poster_image)
 
         self.camera_label = tk.Label(master, text='Camera Feed')
         self.camera_image = tk.Label(master, text='Live Camera Feed')
@@ -61,20 +67,33 @@ class puzzleGUI:
     def snapshot(self):
         # Get a frame from the video source
         ret, frame = self.vid.get_frame()
+
         if ret:
-            photo = ImageTk.PhotoImage(image = Image.fromarray(frame))
+            photo = ImageTk.PhotoImage(image = Image.fromarray(frame).resize((CAMERA_WIDTH, CAMERA_HEIGHT)))
             self.recent_image.configure(image=photo)
             self.recent_image.photo = photo
-        # self.master.after(self.delay, self.update)
+
+
+    def get_poster_image(self):
+        name = tk.filedialog.askopenfilename(initialdir = '~/Coding',
+        filetypes = (('jpeg files','*.jpg'),('all files','*.*')))
+
+        load = Image.open(name)
+        resized = load.resize((CAMERA_WIDTH, CAMERA_HEIGHT))
+        photo = ImageTk.PhotoImage(resized)
+
+        self.analysis_image.configure(image=photo)
+        self.analysis_image.photo = photo
+
 
     def update(self):
          # Get a frame from the video source
          ret, frame = self.vid.get_frame()
 
          if ret:
-             photo = ImageTk.PhotoImage(image = Image.fromarray(frame))
-             self.camera_image.configure(image=photo)
-             self.camera_image.photo = photo
+            photo = ImageTk.PhotoImage(image = Image.fromarray(frame).resize((CAMERA_WIDTH, CAMERA_HEIGHT)))
+            self.camera_image.configure(image=photo)
+            self.camera_image.photo = photo
 
          self.master.after(self.delay, self.update)
 
