@@ -1,4 +1,6 @@
 .DS_Store
-input/*
+input/globals
+input/pieces
+input/segmentation
 output/*
 __pycache__/
