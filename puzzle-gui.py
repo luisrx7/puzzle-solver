@@ -6,8 +6,8 @@ import tkinter.filedialog
 import math
 import myvideocapture as mvc
 
-CAMERA_WIDTH = 563
-CAMERA_HEIGHT = 450
+CAMERA_WIDTH = 750
+CAMERA_HEIGHT = 600
 MIN_MATCH_COUNT = 4
 ICECREAMTRUCK_DIMENSIONS = (20,15)
 CROP_FACTOR = 0.2
@@ -52,20 +52,21 @@ class puzzleGUI:
         self.quit_button = tk.Button(master, text='Quit', command=master.quit)
 
         # Place GUI elements
-        self.recent_label.grid(row=0, column=0)
-        self.analysis_label.grid(row=0, column=1)
-        self.recent_image.grid(row=1, column=0)
-        self.analysis_image.grid(row=1, column=1)
-        self.getfile_button.grid(row=2, column=0)
-        self.getglobal_button.grid(row=2, column=1)
+        self.camera_label.grid(row=0, column=0)
+        self.recent_label.grid(row=0, column=1)
+        self.analysis_label.grid(row=0, column=2)
 
-        self.camera_label.grid()
-        self.camera_image.grid(rowspan=3)
-        self.matches_label.grid(row=4, column=1)
-        self.rotation_label.grid(row=5, column=1)
-        self.location_label.grid(row=6, column=1)
-        self.capture_button.grid(row=7, column=0)
-        self.quit_button.grid(row=7, column=1)
+        self.camera_image.grid(row=1, column=0, rowspan=3)
+        self.recent_image.grid(row=1, column=1, rowspan=3)
+        self.analysis_image.grid(row=1, column=2, rowspan=3)
+        self.matches_label.grid(row=1, column=3)
+        self.rotation_label.grid(row=2, column=3)
+        self.location_label.grid(row=3, column=3)
+
+        self.capture_button.grid(row=4, column=0)
+        self.getfile_button.grid(row=4, column=1)
+        self.getglobal_button.grid(row=4, column=2)
+        self.quit_button.grid(row=4, column=3)
 
     def crop_image (self, image):
         factor = CROP_FACTOR
