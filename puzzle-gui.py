@@ -6,8 +6,8 @@ import tkinter.filedialog
 import math
 import myvideocapture as mvc
 
-CAMERA_WIDTH = 750
-CAMERA_HEIGHT = 600
+CAMERA_WIDTH = 813
+CAMERA_HEIGHT = 650
 MIN_MATCH_COUNT = 4
 ICECREAMTRUCK_DIMENSIONS = (20,15)
 CROP_FACTOR = 0.2
@@ -40,12 +40,12 @@ class puzzleGUI:
         self.analysis_label = tk.Label(master, text='Target Image')
         self.recent_image = tk.Label(master, text=' ')
         self.analysis_image = tk.Label(master, text=' ')
-        self.getfile_button = tk.Button(master, text='Import', command=self.get_piece_from_file)
-        self.getglobal_button = tk.Button(master, text='Import', command=self.get_poster_image)
+        self.getfile_button = tk.Button(master, text='Import Piece', command=self.get_piece_from_file)
+        self.getglobal_button = tk.Button(master, text='Import Image', command=self.get_poster_image)
 
         self.camera_label = tk.Label(master, text='Camera Feed')
         self.camera_image = tk.Label(master, text='Live Camera Feed')
-        self.capture_button = tk.Button(master, text='Capture', command=self.snapshot)
+        self.capture_button = tk.Button(master, text='Capture Piece', command=self.snapshot)
         self.matches_label = tk.Label(master, text=' ')
         self.rotation_label = tk.Label(master, text=' ')
         self.location_label = tk.Label(master, text=' ')
@@ -59,14 +59,14 @@ class puzzleGUI:
         self.camera_image.grid(row=1, column=0, rowspan=3)
         self.recent_image.grid(row=1, column=1, rowspan=3)
         self.analysis_image.grid(row=1, column=2, rowspan=3)
-        self.matches_label.grid(row=1, column=3)
-        self.rotation_label.grid(row=2, column=3)
-        self.location_label.grid(row=3, column=3)
 
         self.capture_button.grid(row=4, column=0)
         self.getfile_button.grid(row=4, column=1)
         self.getglobal_button.grid(row=4, column=2)
-        self.quit_button.grid(row=4, column=3)
+
+        self.matches_label.grid(row=5, column=0)
+        self.location_label.grid(row=6, column=1)
+        self.rotation_label.grid(row=5, column=1)
 
     def crop_image (self, image):
         factor = CROP_FACTOR
@@ -170,11 +170,12 @@ class puzzleGUI:
             # Estimate an affine transform
             Mprime = cv2.estimateAffinePartial2D(src_pts, dst_pts)
             degrees = math.degrees(math.atan2(Mprime[0][1][0], Mprime[0][0][0])) * (-1.0)
-            text = str(round(abs(degrees)))
-            if degrees > 0:
-                text += " counterclockwise"
+
+            turns = round(degrees/90.0) * 90
+            if turns > 0:
+                text = str(turns) + " counterclockwise"
             else:
-                text += " clockwise"
+                text = str(abs(turns)) + " clockwise"
             self.rotation_label.configure(text="Rotation: " + text)
 
             # Rotate the piece back
