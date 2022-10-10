@@ -5,6 +5,7 @@ import tkinter as tk
 import tkinter.filedialog
 import math
 import myvideocapture as mvc
+import time
 
 CAMERA_WIDTH = 813
 CAMERA_HEIGHT = 650
@@ -46,9 +47,11 @@ class puzzleGUI:
         self.camera_label = tk.Label(master, text='Camera Feed')
         self.camera_image = tk.Label(master, text='Live Camera Feed')
         self.capture_button = tk.Button(master, text='Capture Piece', command=self.snapshot)
+        self.success_label = tk.Label(master, text=' ')
         self.matches_label = tk.Label(master, text=' ')
         self.rotation_label = tk.Label(master, text=' ')
         self.location_label = tk.Label(master, text=' ')
+        self.time_elapsed = tk.Label(master, text=' ')
         self.quit_button = tk.Button(master, text='Quit', command=master.quit)
 
         # Place GUI elements
@@ -64,7 +67,9 @@ class puzzleGUI:
         self.getfile_button.grid(row=4, column=1)
         self.getglobal_button.grid(row=4, column=2)
 
-        self.matches_label.grid(row=5, column=0)
+        self.success_label.grid(row=5, column=0)
+        self.matches_label.grid(row=6, column=0)
+        self.time_elapsed.grid(row=7, column=0)
         self.location_label.grid(row=6, column=1)
         self.rotation_label.grid(row=5, column=1)
 
@@ -93,7 +98,7 @@ class puzzleGUI:
         self.train_image = cv_photo
 
         sift = cv2.SIFT_create()
-        kp2, des2 = sift.detectAndCompute(self.train_image, None)
+        self.kp2, self.des2 = sift.detectAndCompute(self.train_image, None)
         # Get features of target image and  analyze them at load rather than with every new piece
 
     def get_piece_from_file(self):
@@ -116,19 +121,20 @@ class puzzleGUI:
         return pil_photo, cv_photo
 
     def analyze_piece (self):
+        start = time.time()
+
         # Read in query image, find features, and then find matches
         sift = cv2.SIFT_create()
         kp1, des1 = sift.detectAndCompute(self.query_image, None)
-        kp2, des2 = sift.detectAndCompute(self.train_image, None)
         bf = cv2.BFMatcher()
-        matches = bf.knnMatch(des1, des2, k=2)
+        matches = bf.knnMatch(des1, self.des2, k=2)
 
         # Apply ratio test to only pick out the 'good' feature matches
         good = []; points = [];
         for m,n in matches:
             if m.distance < 0.70 * n.distance:  # May need to modify to get most # of pins
                 good.append([m])
-                points.append([int(kp2[m.trainIdx].pt[0]), int(kp2[m.trainIdx].pt[1])])
+                points.append([int(self.kp2[m.trainIdx].pt[0]), int(self.kp2[m.trainIdx].pt[1])])
         points = np.float32(points)
 
         # Use k-means clustering to find where the most matches are
@@ -140,20 +146,23 @@ class puzzleGUI:
             compactness, label, center = cv2.kmeans(points, k, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
 
         # Separate the data into clusters, find cluster with most elements, and get its centroid
-        series = []
-        for i in range(k):
-            series.append(points[label.ravel()==i])
-        mostElements = series[0]
-        for s in series:
-            if len(s) > len(mostElements):
-                mostElements = s
-        (x, y) = (int(np.mean(mostElements[:,0])), int(np.mean(mostElements[:,1])))
+        try:
+            series = []
+            for i in range(k):
+                series.append(points[label.ravel()==i])
+            mostElements = series[0]
+            for s in series:
+                if len(s) > len(mostElements):
+                    mostElements = s
+            (x, y) = (int(np.mean(mostElements[:,0])), int(np.mean(mostElements[:,1])))
+        except:
+            pass # If not enough matches, then pass (don't send error to console)
 
         # Filter to keep just the good feature matches in the best cluster
         good = []
         for m,n in matches:
             if m.distance < 0.7*n.distance:
-                if (int(kp2[m.trainIdx].pt[0]) in mostElements[:,0]):
+                if (int(self.kp2[m.trainIdx].pt[0]) in mostElements[:,0]):
                     good.append(m)
         self.matches_label.configure(text="Matches: "+str(len(good)))
 
@@ -161,9 +170,12 @@ class puzzleGUI:
         img4 = self.train_image.copy()  # Copy of global image for feature-matching
         try: rows, cols, colors = self.query_image.shape
         except: rows, cols = self.query_image.shape # File input has 2 values, webcam has 3
+
         if len(good) >= MIN_MATCH_COUNT:
+            self.success_label.configure(text="Success", fg="#0F0")
+
             src_pts = np.float32([kp1[m.queryIdx].pt for m in good ]).reshape(-1, 1, 2)
-            dst_pts = np.float32([kp2[m.trainIdx].pt for m in good ]).reshape(-1, 1, 2)
+            dst_pts = np.float32([self.kp2[m.trainIdx].pt for m in good ]).reshape(-1, 1, 2)
             M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
             matchesMask = mask.ravel().tolist()
 
@@ -182,28 +194,27 @@ class puzzleGUI:
             M = cv2.getRotationMatrix2D((cols/2,rows/2), degrees, 1)
             img5 = self.query_image.copy()
             img5 = cv2.warpAffine(self.query_image, M, (cols, rows))
+
+            # Find the centroid of the cluster
+            (ydim, xdim, colors) = self.train_image.shape
+            (xx, yy) = ICECREAMTRUCK_DIMENSIONS # DORY_DIMENSIONS if 'dory' in puzzleName else MINION_DIMENSIONS
+            (xdim, ydim) = (xdim/xx, ydim/yy)
+            (xcoord, ycoord) = (int(math.floor(x/xdim)), int(math.floor(y/ydim)))
+            self.location_label.configure(text="Location: ("+str(xcoord+1)+", "+str(ycoord+1)+")")  # Start from 0 is unnatural
+            x = int(math.floor(x/xdim)*xdim + xdim/2)  # Discretize the centroid
+            y = int(math.floor(y/ydim)*ydim + ydim/2)
+            cv2.circle(img4, (x,y), 200, (0,0,255), 25)  # Draw centroid in blue for this specific piece output
         else:
             # print( "Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT) )
             matchesMask = None
+            self.success_label.configure(text="Failure", fg="#F00")
+            self.rotation_label.configure(text="")
+            self.location_label.configure(text="")
 
         draw_params = dict(matchColor = (0, 255, 0),
            singlePointColor = None,
            matchesMask = matchesMask,  # Only draw the inliers
            flags = 2)
-
-        # Find the centroid of the cluster
-        (ydim, xdim, colors) = self.train_image.shape
-        (xx, yy) = ICECREAMTRUCK_DIMENSIONS # DORY_DIMENSIONS if 'dory' in puzzleName else MINION_DIMENSIONS
-        (xdim, ydim) = (xdim/xx, ydim/yy)
-        (xcoord, ycoord) = (int(math.floor(x/xdim)), int(math.floor(y/ydim)))
-        self.location_label.configure(text="Location: ("+str(xcoord+1)+", "+str(ycoord+1)+")")  # Start from 0 is unnatural
-        x = int(math.floor(x/xdim)*xdim + xdim/2)  # Discretize the centroid
-        y = int(math.floor(y/ydim)*ydim + ydim/2)
-
-        try: rows, cols, colors = self.query_image.shape
-        except: rows, cols = self.query_image.shape # File input has 2 values, webcam has 3
-
-        cv2.circle(img4, (x,y), 150, 255, -15)  # Draw centroid in blue for this specific piece output
 
         # Resize and show on screen
         try: (x, y, c) = img4.shape
@@ -214,6 +225,11 @@ class puzzleGUI:
         im_pil = ImageTk.PhotoImage(Image.fromarray(img))
         self.analysis_image.configure(image=im_pil)
         self.analysis_image.photo = im_pil
+
+        # Measure the elapsed time
+        end = time.time()
+        text = str(round(end-start,3)) + " seconds"
+        self.time_elapsed.configure(text=text)
 
     def update(self):
         # Get a frame from the video source
