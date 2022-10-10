@@ -98,7 +98,8 @@ class puzzleGUI:
         self.train_image = cv_photo
 
         sift = cv2.SIFT_create()
-        self.kp2, self.des2 = sift.detectAndCompute(self.train_image, None)
+        if self.train_image is not None:
+            self.kp2, self.des2 = sift.detectAndCompute(self.train_image, None)
         # Get features of target image and  analyze them at load rather than with every new piece
 
     def get_piece_from_file(self):
@@ -112,7 +113,9 @@ class puzzleGUI:
         name = tk.filedialog.askopenfilename(initialdir = '../puzzle-solver/input',
         filetypes = (('jpeg files','*.jpg'),('all files','*.*')))
 
-        load = Image.open(name)
+        try: load = Image.open(name)
+        except: return None, None
+
         resized = load.resize((CAMERA_WIDTH, CAMERA_HEIGHT))
         pil_photo = ImageTk.PhotoImage(resized)
 
@@ -145,6 +148,7 @@ class puzzleGUI:
         if len(points) > 1:
             compactness, label, center = cv2.kmeans(points, k, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
 
+        good = []
         # Separate the data into clusters, find cluster with most elements, and get its centroid
         try:
             series = []
@@ -155,15 +159,15 @@ class puzzleGUI:
                 if len(s) > len(mostElements):
                     mostElements = s
             (x, y) = (int(np.mean(mostElements[:,0])), int(np.mean(mostElements[:,1])))
+
+            for m,n in matches:
+                if m.distance < 0.7*n.distance:
+                    if (int(self.kp2[m.trainIdx].pt[0]) in mostElements[:,0]):
+                        good.append(m)
         except:
             pass # If not enough matches, then pass (don't send error to console)
 
         # Filter to keep just the good feature matches in the best cluster
-        good = []
-        for m,n in matches:
-            if m.distance < 0.7*n.distance:
-                if (int(self.kp2[m.trainIdx].pt[0]) in mostElements[:,0]):
-                    good.append(m)
         self.matches_label.configure(text="Matches: "+str(len(good)))
 
         # Rotate the piece back to the correct orientation
@@ -189,11 +193,6 @@ class puzzleGUI:
             else:
                 text = str(abs(turns)) + " clockwise"
             self.rotation_label.configure(text="Rotation: " + text)
-
-            # Rotate the piece back
-            M = cv2.getRotationMatrix2D((cols/2,rows/2), degrees, 1)
-            img5 = self.query_image.copy()
-            img5 = cv2.warpAffine(self.query_image, M, (cols, rows))
 
             # Find the centroid of the cluster
             (ydim, xdim, colors) = self.train_image.shape
