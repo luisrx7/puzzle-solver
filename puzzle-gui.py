@@ -12,10 +12,11 @@ CAMERA_HEIGHT = 650
 MIN_MATCH_COUNT = 4
 ICECREAMTRUCK_DIMENSIONS = (20,15)
 CROP_FACTOR = 0.2
+MAX_ATTEMPTS = 5
 
 class puzzleGUI:
 
-    def __init__(self, master, video_source=0):
+    def __init__(self, master, video_source=1):
         self.master = master
         self.query_image = None
         self.train_image = None
@@ -83,7 +84,7 @@ class puzzleGUI:
     def snapshot(self):
         start = time.time()
         num_attempts = 0
-        while num_attempts <= 7:
+        while num_attempts <= MAX_ATTEMPTS:
             # Get a frame from the video source
             ret, frame = self.vid.get_frame()
             frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
