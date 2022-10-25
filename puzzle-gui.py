@@ -51,6 +51,7 @@ class puzzleGUI:
         self.matches_label = tk.Label(master, text=' ')
         self.rotation_label = tk.Label(master, text=' ')
         self.location_label = tk.Label(master, text=' ')
+        self.attempts_label = tk.Label(master, text=' ')
         self.time_elapsed = tk.Label(master, text=' ')
         self.quit_button = tk.Button(master, text='Quit', command=master.quit)
 
@@ -69,7 +70,8 @@ class puzzleGUI:
 
         self.success_label.grid(row=5, column=0)
         self.matches_label.grid(row=6, column=0)
-        self.time_elapsed.grid(row=7, column=0)
+        self.attempts_label.grid(row=7, column=0)
+        self.time_elapsed.grid(row=8, column=0)
         self.location_label.grid(row=6, column=1)
         self.rotation_label.grid(row=5, column=1)
 
@@ -79,17 +81,31 @@ class puzzleGUI:
         return image[:,int(factor*height):int(height*(1-factor))]
 
     def snapshot(self):
-        # Get a frame from the video source
-        ret, frame = self.vid.get_frame()
-        frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-        frame = self.crop_image(frame)
+        start = time.time()
+        num_attempts = 0
+        while num_attempts <= 7:
+            # Get a frame from the video source
+            ret, frame = self.vid.get_frame()
+            frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+            frame = self.crop_image(frame)
 
-        if ret:
-            photo = ImageTk.PhotoImage(image = Image.fromarray(frame).resize((int(CAMERA_WIDTH*(1-2*CROP_FACTOR)), CAMERA_HEIGHT)))
-            self.recent_image.configure(image=photo)
-            self.recent_image.photo = photo
-            self.query_image = frame
-            self.analyze_piece()
+            if ret:
+                photo = ImageTk.PhotoImage(image = Image.fromarray(frame).resize((int(CAMERA_WIDTH*(1-2*CROP_FACTOR)), CAMERA_HEIGHT)))
+                self.recent_image.configure(image=photo)
+                self.recent_image.photo = photo
+                self.query_image = frame
+                num_matches = self.analyze_piece()
+
+            num_attempts += 1
+            if num_matches >= MIN_MATCH_COUNT:
+                break
+
+        text = "Attempts: " + str(num_attempts)
+        self.attempts_label.configure(text=text)
+        # Measure the elapsed time
+        end = time.time()
+        text = str(round(end-start,3)) + " seconds"
+        self.time_elapsed.configure(text=text)
 
     def get_poster_image(self):
         pil_photo, cv_photo = self.get_image_from_file()
@@ -100,7 +116,7 @@ class puzzleGUI:
         sift = cv2.SIFT_create()
         if self.train_image is not None:
             self.kp2, self.des2 = sift.detectAndCompute(self.train_image, None)
-        # Get features of target image and  analyze them at load rather than with every new piece
+        # Get features of target image and analyze them at load rather than with every new piece
 
     def get_piece_from_file(self):
         pil_photo, cv_photo = self.get_image_from_file()
@@ -124,8 +140,6 @@ class puzzleGUI:
         return pil_photo, cv_photo
 
     def analyze_piece (self):
-        start = time.time()
-
         # Read in query image, find features, and then find matches
         sift = cv2.SIFT_create()
         kp1, des1 = sift.detectAndCompute(self.query_image, None)
@@ -133,10 +147,9 @@ class puzzleGUI:
         matches = bf.knnMatch(des1, self.des2, k=2)
 
         # Apply ratio test to only pick out the 'good' feature matches
-        good = []; points = [];
+        points = [];
         for m,n in matches:
             if m.distance < 0.70 * n.distance:  # May need to modify to get most # of pins
-                good.append([m])
                 points.append([int(self.kp2[m.trainIdx].pt[0]), int(self.kp2[m.trainIdx].pt[1])])
         points = np.float32(points)
 
@@ -181,7 +194,6 @@ class puzzleGUI:
             src_pts = np.float32([kp1[m.queryIdx].pt for m in good ]).reshape(-1, 1, 2)
             dst_pts = np.float32([self.kp2[m.trainIdx].pt for m in good ]).reshape(-1, 1, 2)
             M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-            matchesMask = mask.ravel().tolist()
 
             # Estimate an affine transform
             Mprime = cv2.estimateAffinePartial2D(src_pts, dst_pts)
@@ -205,15 +217,9 @@ class puzzleGUI:
             cv2.circle(img4, (x,y), 200, (0,0,255), 25)  # Draw centroid in blue for this specific piece output
         else:
             # print( "Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT) )
-            matchesMask = None
             self.success_label.configure(text="Failure", fg="#F00")
             self.rotation_label.configure(text="")
             self.location_label.configure(text="")
-
-        draw_params = dict(matchColor = (0, 255, 0),
-           singlePointColor = None,
-           matchesMask = matchesMask,  # Only draw the inliers
-           flags = 2)
 
         # Resize and show on screen
         try: (x, y, c) = img4.shape
@@ -225,10 +231,7 @@ class puzzleGUI:
         self.analysis_image.configure(image=im_pil)
         self.analysis_image.photo = im_pil
 
-        # Measure the elapsed time
-        end = time.time()
-        text = str(round(end-start,3)) + " seconds"
-        self.time_elapsed.configure(text=text)
+        return len(good) # Return the number of matches
 
     def update(self):
         # Get a frame from the video source
