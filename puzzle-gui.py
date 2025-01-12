@@ -57,24 +57,30 @@ class puzzleGUI:
         self.quit_button = tk.Button(master, text='Quit', command=master.quit)
 
         # Place GUI elements
-        self.camera_label.grid(row=0, column=0)
-        self.recent_label.grid(row=0, column=1)
-        self.analysis_label.grid(row=0, column=2)
+        self.camera_label.grid(row=0, column=0, sticky="nsew")
+        self.recent_label.grid(row=0, column=1, sticky="nsew")
+        self.analysis_label.grid(row=0, column=2, sticky="nsew")
 
-        self.camera_image.grid(row=1, column=0, rowspan=3)
-        self.recent_image.grid(row=1, column=1, rowspan=3)
-        self.analysis_image.grid(row=1, column=2, rowspan=3)
+        self.camera_image.grid(row=1, column=0, rowspan=3, sticky="nsew")
+        self.recent_image.grid(row=1, column=1, rowspan=3, sticky="nsew")
+        self.analysis_image.grid(row=1, column=2, rowspan=3, sticky="nsew")
 
-        self.capture_button.grid(row=4, column=0)
-        self.getfile_button.grid(row=4, column=1)
-        self.getglobal_button.grid(row=4, column=2)
+        self.capture_button.grid(row=4, column=0, sticky="nsew")
+        self.getfile_button.grid(row=4, column=1, sticky="nsew")
+        self.getglobal_button.grid(row=4, column=2, sticky="nsew")
 
-        self.success_label.grid(row=5, column=0)
-        self.matches_label.grid(row=6, column=0)
-        self.attempts_label.grid(row=7, column=0)
-        self.time_elapsed.grid(row=8, column=0)
-        self.location_label.grid(row=6, column=1)
-        self.rotation_label.grid(row=5, column=1)
+        self.success_label.grid(row=5, column=0, sticky="nsew")
+        self.matches_label.grid(row=6, column=0, sticky="nsew")
+        self.attempts_label.grid(row=7, column=0, sticky="nsew")
+        self.time_elapsed.grid(row=8, column=0, sticky="nsew")
+        self.location_label.grid(row=6, column=1, sticky="nsew")
+        self.rotation_label.grid(row=5, column=1, sticky="nsew")
+
+        # Configure grid to resize with window
+        for i in range(3):
+            master.grid_columnconfigure(i, weight=1)
+        for i in range(9):
+            master.grid_rowconfigure(i, weight=1)
 
     def crop_image (self, image):
         factor = CROP_FACTOR
