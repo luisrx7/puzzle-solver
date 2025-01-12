@@ -7,6 +7,7 @@ import math
 import myvideocapture as mvc
 import time
 
+
 CAMERA_WIDTH = 813
 CAMERA_HEIGHT = 650
 MIN_MATCH_COUNT = 4
@@ -15,8 +16,7 @@ CROP_FACTOR = 0.2
 MAX_ATTEMPTS = 5
 
 class puzzleGUI:
-
-    def __init__(self, master, video_source=1):
+    def __init__(self, master, video_source=0):
         self.master = master
         self.query_image = None
         self.train_image = None

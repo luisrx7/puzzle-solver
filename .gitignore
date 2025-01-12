@@ -4,3 +4,4 @@ input/pieces
 input/segmentation
 output/*
 __pycache__/
+venv/*
